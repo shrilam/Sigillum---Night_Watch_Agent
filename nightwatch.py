@@ -35,6 +35,42 @@ def _time(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
+def _safe(value: Any) -> str:
+    """Keep provider-controlled text from changing the report structure."""
+    return re.sub(r"[\x00-\x1f\x7f]", " ", str(value)).strip()
+
+
+def _validate(document: Mapping[str, Any]) -> None:
+    if not isinstance(document, Mapping) or not isinstance(document.get("alert"), Mapping):
+        raise ValueError("incident must contain an alert object")
+    alert = document["alert"]
+    if not isinstance(alert.get("service"), str) or not isinstance(
+        alert.get("started_at"), str
+    ):
+        raise ValueError("alert requires service and started_at strings")
+    try:
+        _time(alert["started_at"])
+    except (TypeError, ValueError) as exc:
+        raise ValueError("alert.started_at must be an ISO-8601 timestamp") from exc
+    if not isinstance(document.get("services"), Mapping):
+        raise ValueError("incident must contain a services object")
+    for service, data in document["services"].items():
+        if not isinstance(data, Mapping):
+            raise ValueError(f"service {service!r} must be an object")
+        for key in ("depends_on", "logs", "changes"):
+            if key in data and not isinstance(data[key], list):
+                raise ValueError(f"{service}.{key} must be a list")
+        for change in data.get("changes", []):
+            if not isinstance(change, Mapping) or not isinstance(
+                change.get("timestamp"), str
+            ):
+                raise ValueError(f"{service}.changes entries require timestamp")
+            try:
+                _time(change["timestamp"])
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"{service}.changes timestamp is invalid") from exc
+
+
 @dataclass
 class Action:
     service: str
@@ -73,7 +109,7 @@ class Investigation:
                 message = str(entry.get("message", ""))
                 if SUSPICIOUS.search(message):
                     self.suspicious.append(
-                        f"{entry.get('timestamp', 'unknown')} {service}: {message}"
+                        f"{_safe(entry.get('timestamp', 'unknown'))} {service}: {_safe(message)}"
                     )
             metrics = data.get("metrics", {})
             if metrics.get("healthy") is False:
@@ -81,8 +117,8 @@ class Investigation:
             for change in data.get("changes", []):
                 if _time(change["timestamp"]) <= started:
                     self.findings.append(
-                        f"{service} changed at {change['timestamp']}: "
-                        f"{change.get('description', 'unspecified change')}"
+                        f"{service} changed at {_safe(change['timestamp'])}: "
+                        f"{_safe(change.get('description', 'unspecified change'))}"
                     )
 
     def investigate(self, remediator: Callable[[Action], bool] | None = None) -> None:
@@ -130,7 +166,9 @@ class Investigation:
         timeline = [f"{alert['started_at']}: alert began for {alert['service']}"]
         for finding in self.findings:
             timeline.append(f"observed: {finding}")
-        roots = self.findings or ["No root cause was established from the supplied evidence."]
+        roots = [
+            finding for finding in self.findings if "changed at" in finding
+        ] or ["No root cause was established from the supplied evidence."]
         actions = [
             f"{item.service}: {item.action} ({'verified' if item.verified else 'unverified'})"
             for item in self.actions
@@ -141,7 +179,7 @@ class Investigation:
         suspicious = self.suspicious or ["None observed."]
         return "\n".join(
             [
-                f"Summary: {alert.get('message', 'Service alert investigated.')}",
+                f"Summary: {_safe(alert.get('message', 'Service alert investigated.'))}",
                 "Timeline:",
                 *[f"- {line}" for line in timeline],
                 "Root cause(s):",
@@ -158,10 +196,7 @@ class Investigation:
 
 def run(document: Mapping[str, Any], remediator: Callable[[Action], bool] | None = None) -> str:
     """Investigate a JSON-compatible incident and return its postmortem."""
-    required = {"alert", "services"}
-    missing = required - document.keys()
-    if missing:
-        raise ValueError(f"missing required fields: {', '.join(sorted(missing))}")
+    _validate(document)
     investigation = Investigation(
         alert=document["alert"],
         services=document["services"],

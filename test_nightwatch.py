@@ -67,6 +67,17 @@ class NightWatchTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             run({"alert": {}})
 
+    def test_report_escapes_control_characters(self):
+        self.document["alert"]["message"] = "bad\nSummary: forged"
+        report = run(self.document)
+        self.assertNotIn("bad\nSummary: forged", report)
+        self.assertIn("bad Summary: forged", report)
+
+    def test_malformed_timestamp_is_rejected(self):
+        self.document["alert"]["started_at"] = "not-a-timestamp"
+        with self.assertRaises(ValueError):
+            run(self.document)
+
 
 if __name__ == "__main__":
     unittest.main()
