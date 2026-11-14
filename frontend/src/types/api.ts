@@ -11,12 +11,16 @@ export interface Service {
 
 export interface Incident {
   id: string;
+  scenario_id: string;
   title: string;
   severity: Severity;
   status: string;
   trigger: string;
   impact: string;
   summary: string;
+  affected_services: string[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SimulatorState {

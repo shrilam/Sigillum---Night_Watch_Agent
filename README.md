@@ -15,7 +15,19 @@ The home page is a fictional, interactive storefront. Select **Team workspace** 
 
 ## Migration scaffold (React + FastAPI)
 
-The original sandbox above remains available as a reference. The new `frontend/` and `backend/` projects are an early migration scaffold; currently, the React dashboard reads the seeded checkout scenario and service topology from FastAPI. Investigation, remediation, Ollama, SSE, and SQLite workflows are not implemented yet.
+The original sandbox above remains available as a reference. The new `frontend/`
+and `backend/` projects are an early migration scaffold; currently, the React
+dashboard reads the seeded checkout scenario and service topology from FastAPI.
+The frontend separates its dashboard page, data-loading hook, reusable
+components, API client, and types. The backend has package boundaries for API,
+core configuration, models, database, monitoring, simulator fixtures, agent,
+and local integrations. The migrated app now supports three replayable scenarios,
+metric-driven incident detection, SQLite history, evidence-linked investigation,
+allowlisted simulated actions with approvals, recovery checks, reports, local
+Ollama status/investigation, and SSE updates. When Ollama is unavailable, the
+investigator explicitly falls back to telemetry-derived observations rather
+than claiming AI results. See [backend/README.md](backend/README.md) and
+[frontend/README.md](frontend/README.md) for module ownership and limitations.
 
 Requirements: Python 3.10+ and Node.js 20+ (npm is included with Node.js). From the repository root, create a Python environment, install backend dependencies, and start FastAPI:
 
@@ -23,7 +35,7 @@ Requirements: Python 3.10+ and Node.js 20+ (npm is included with Node.js). From 
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r backend\requirements.txt
-uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
+uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8001
 ```
 
 In a second terminal, install and start the frontend:
@@ -34,7 +46,16 @@ npm install
 npm run dev -- --host 127.0.0.1
 ```
 
-Open <http://127.0.0.1:5173>. FastAPI's interactive API documentation is at <http://127.0.0.1:8000/docs>. The Vite development server proxies `/api` requests to the loopback-only backend.
+Open <http://127.0.0.1:5173>. FastAPI's interactive API documentation is at <http://127.0.0.1:8001/docs>. The Vite development server proxies `/api` requests to the loopback-only backend at port 8001 by default; override this with `VITE_API_PROXY_TARGET` if you run the API on a different port.
+
+The migrated API includes `GET /api/health`, `/api/services`, `/api/scenarios`,
+`/api/state`, `/api/incidents`, `/api/metrics`, `/api/logs`, and `/api/events`;
+details are available for individual services and incidents. Replay a synthetic failure
+with `POST /api/simulator/inject` and `{"scenario_id":"checkout-double-fault"}`.
+Investigation, remediation approvals/execution, recovery verification, reports,
+model status, agent activity, and `/api/events/stream` are also available. The
+active scenario, incidents, telemetry, evidence, decisions, and reports are
+stored in the local SQLite database and restored after a backend restart.
 
 ## Scenarios
 
@@ -78,7 +99,12 @@ Diagnosis completeness, remediation completion, and postmortem quality contribut
 
 ## Tests
 
-The documented standard-library test command is `python -m unittest discover -s tests -v`, but the test suite has not been added yet; this currently fails because the `tests/` directory does not exist.
+The legacy standard-library test command `python -m unittest discover -s tests -v`
+is not available because the original app has no root `tests/` directory. Run
+the new backend tests from the repository root with
+`.\.venv\Scripts\python.exe -m pytest -c backend\pyproject.toml backend\tests -q`.
+Frontend test and build scripts are in [frontend/package.json](frontend/package.json);
+they require Node.js/npm.
 
 ## Migration baseline
 
@@ -86,4 +112,4 @@ See [docs/phase-1-baseline.md](docs/phase-1-baseline.md) for the recorded protot
 
 ## Safety and limitations
 
-This is a fictional, in-memory simulator. It has no shell/command execution or integrations to real infrastructure. It is designed for local team experiments, not production incident response. The whole instance shares one active scenario; do not expose its loopback server publicly.
+The legacy sandbox uses in-memory state; the migrated backend persists simulator state and incident evidence in local SQLite. Both operate only on fictional services, have no shell/command execution or production integrations, and should not be exposed publicly. They are local development tools, not production incident-response systems.
