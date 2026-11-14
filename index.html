@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1018" />
+    <meta name="description" content="A safe, replayable on-call incident response sandbox." />
+    <title>On-call Lab · Incident Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="storefront" id="storefront">
+      <header class="shop-header">
+        <a class="shop-brand" href="#shop-home" aria-label="BrightCart home"><span class="shop-brand-mark">b</span><span>brightcart</span></a>
+        <label class="shop-search"><span>⌕</span><input id="shopSearch" type="search" placeholder="Search for something good…" aria-label="Search products" /><button id="shopSearchButton" aria-label="Search">Search</button></label>
+        <nav class="shop-nav" aria-label="Main navigation"><button class="shop-link" id="shopSignIn">Hello, team<br /><strong>Team workspace</strong></button><button class="cart-button" id="cartButton" aria-label="Open shopping cart"><span class="cart-icon">▱</span><span class="cart-count" id="cartCount">0</span><strong>Cart</strong></button></nav>
+      </header>
+      <nav class="category-bar" id="categoryBar" aria-label="Shop categories"></nav>
+      <main class="shop-main" id="shop-home">
+        <section class="shop-hero">
+          <div class="hero-copy"><span class="hero-kicker"><i></i> THE EVERYDAY EDIT</span><h1>Small joys.<br /><span>Big everyday energy.</span></h1><p>Good finds for your desk, your downtime, and everything in between.</p><button class="hero-button" id="shopNow">Shop the collection <span>→</span></button><div class="hero-proof"><span>✦ Curated for you</span><span>✦ A little color goes a long way</span></div></div>
+          <div class="hero-art" aria-label="Colorful illustration of curated shopping essentials"><div class="hero-sun"></div><div class="hero-star star-one">✳</div><div class="hero-star star-two">✦</div><div class="hero-card hero-card-a"><span>good<br />things</span><i>✷</i></div><div class="hero-card hero-card-b"><span>your<br />new fave</span><i>◒</i></div><div class="hero-orbit"></div><div class="hero-ribbon">A GOOD DAY<br />STARTS HERE</div></div>
+          <div class="hero-pagination"><i class="active"></i><i></i><i></i></div>
+        </section>
+        <section class="shop-benefits" aria-label="Shopping benefits"><div><span class="benefit-icon peach">↗</span><span><strong>Fresh finds</strong><small>Little upgrades, big smiles</small></span></div><div><span class="benefit-icon lavender">♡</span><span><strong>Picked with care</strong><small>Things you’ll actually use</small></span></div><div><span class="benefit-icon mint">✦</span><span><strong>Easy browsing</strong><small>Find your next favorite</small></span></div></section>
+        <section class="product-section" id="collection"><div class="product-heading"><div><span class="shop-eyebrow">A FEW THINGS WE LOVE</span><h2>Popular right now <span>✦</span></h2><p id="shopResultCount">A fresh little lineup of everyday favorites.</p></div><button class="view-all" id="viewAll">View all <span>→</span></button></div><div class="product-grid" id="productGrid"></div><div class="shop-empty" id="shopEmpty" hidden>No finds in this aisle yet. Try another category or search.</div></section>
+        <section class="newsletter"><div><span class="shop-eyebrow">GOOD THINGS, OCCASIONALLY</span><h2>A little note from us?</h2><p>Fresh picks and happy little finds, delivered when it matters.</p></div><form id="newsletterForm"><label class="sr-only" for="newsletterEmail">Your email</label><input id="newsletterEmail" type="email" placeholder="Your email address" required /><button type="submit">Sounds good <span>→</span></button></form></section>
+        <footer class="shop-footer"><a class="shop-brand" href="#shop-home"><span class="shop-brand-mark">b</span><span>brightcart</span></a><span>Fictional storefront · Made for the On-call Lab sandbox</span><button id="footerWorkspace">Team workspace ↗</button></footer>
+      </main>
+      <div class="shop-toast" id="shopToast" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="workspace-modal" id="workspaceModal" hidden>
+      <button class="modal-backdrop" data-close-modal aria-label="Close password dialog"></button>
+      <section class="workspace-dialog" role="dialog" aria-modal="true" aria-labelledby="workspaceTitle" aria-describedby="workspaceDescription">
+        <button class="modal-close" type="button" data-close-modal aria-label="Close">×</button>
+        <div class="workspace-lock">⌑</div><span class="shop-eyebrow">TEAM ACCESS</span><h2 id="workspaceTitle">Welcome back, team.</h2><p id="workspaceDescription">Enter your workspace password to open the incident command center.</p>
+        <form id="workspaceLogin"><label for="workspacePassword">Workspace password</label><div class="password-wrap"><input id="workspacePassword" type="password" autocomplete="current-password" placeholder="Enter password" required /><button type="button" id="togglePassword" aria-label="Show password">Show</button></div><p class="login-error" id="loginError" role="alert" hidden>That password didn’t match. Give it another try.</p><button class="workspace-submit" type="submit">Open team workspace <span>→</span></button></form>
+        <p class="demo-note">Local demo access only. This password gate is not production authentication.</p>
+      </section>
+    </div>
+
+    <div class="app-shell dashboard-shell" id="dashboard" hidden>
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="On-call Lab home"><span class="brand-mark">◈</span><span>oncall<span class="brand-light">lab</span></span><span class="env-tag">SANDBOX</span></a>
+        <div class="topbar-right"><button class="back-to-shop" id="backToShop">← Back to shop</button><span class="live-indicator"><i></i> SIMULATION LIVE</span><span class="top-divider"></span><span class="team-label">TEAM WORKSPACE</span><button class="icon-button" id="resetButton" title="Reset current scenario" aria-label="Reset current scenario">↻</button></div>
+      </header>
+
+      <main>
+        <section class="page-heading">
+          <div><div class="eyebrow"><span class="eyebrow-bar"></span> INCIDENT RESPONSE EXERCISE <span class="exercise-id" id="incident-id">INC-2408</span></div><h1>On-call <span>command center</span></h1><p class="page-subtitle">Investigate the signals. Find the cause. Make the safest fix.</p></div>
+          <label class="scenario-picker"><span>SCENARIO</span><select id="scenarioSelect" aria-label="Choose incident scenario"></select></label>
+        </section>
+
+        <section class="alert-banner" id="alertBanner">
+          <div class="alert-symbol">!</div><div class="alert-copy"><div class="alert-title-row"><span class="severity-pill" id="severityPill">SEV-1</span><strong id="incidentTitle">Loading incident…</strong><span class="alert-open" id="alertStatus"><i></i> OPEN</span></div><p id="incidentImpact">Connecting to the local simulator…</p></div><div class="alert-meta"><span class="meta-label">ELAPSED</span><strong id="elapsed">—</strong><span class="meta-label">TRIGGERED BY</span><strong id="triggerName">checkout-slo-burn</strong></div>
+        </section>
+
+        <section class="stats-row" id="statsRow"></section>
+
+        <div class="workspace-grid">
+          <div class="main-column">
+            <section class="panel service-panel">
+              <div class="panel-heading"><div><div class="section-kicker">SYSTEM MAP</div><h2>Service topology <span class="heading-count">12 SERVICES</span></h2></div><div class="health-legend"><span><i class="dot healthy"></i> Healthy</span><span><i class="dot degraded"></i> Degraded</span><span><i class="dot critical"></i> Critical</span></div></div>
+              <div id="serviceMap" class="service-groups" aria-label="Shop service topology"></div>
+              <div class="map-hint"><span>↗</span> Select a service to filter its logs and metrics</div>
+            </section>
+
+            <section class="panel metrics-panel">
+              <div class="panel-heading"><div><div class="section-kicker">TELEMETRY</div><h2>Service metrics <span class="live-mini"><i></i> LIVE</span></h2></div><label class="compact-select"><span class="sr-only">Metric service</span><select id="metricSelect" aria-label="Choose metrics service"></select></label></div>
+              <div class="metric-cards" id="metricCards"></div>
+              <div class="chart-wrap"><div class="chart-axis"><span id="chartUnit">VALUE</span><span>LAST 40 MIN</span></div><div id="metricChart" class="metric-chart"></div></div>
+            </section>
+          </div>
+
+          <aside class="side-column">
+            <section class="panel evidence-panel">
+              <div class="panel-heading"><div><div class="section-kicker">INVESTIGATION</div><h2>Signal stream <span class="log-count" id="logCount">0</span></h2></div><button class="text-button" id="clearFilters">Clear filters</button></div>
+              <div class="log-toolbar"><label class="search-box"><span>⌕</span><input id="logSearch" type="search" placeholder="Search logs…" aria-label="Search logs" /></label><label class="filter-select"><span class="sr-only">Filter by service</span><select id="logServiceFilter" aria-label="Filter logs by service"><option value="">All services</option></select></label></div>
+              <div class="log-list" id="logList" aria-live="polite"></div>
+            </section>
+
+            <section class="panel response-panel">
+              <div class="panel-heading"><div><div class="section-kicker">SAFE REMEDIATION</div><h2>Response actions</h2></div><span class="shield-icon">⬡</span></div>
+              <p class="panel-intro">Actions run only inside this simulator. Changes are reversible with scenario reset.</p>
+              <div class="action-list" id="actionList"></div><div class="action-feedback" id="actionFeedback" role="status" hidden></div>
+            </section>
+
+            <section class="panel postmortem-panel">
+              <div class="panel-heading"><div><div class="section-kicker">CLOSE THE LOOP</div><h2>Postmortem</h2></div><span class="edit-icon">✎</span></div>
+              <p class="panel-intro">Record your hypothesis and a concise explanation before submitting.</p>
+              <div class="diagnosis-list" id="diagnosisList"></div>
+              <label class="field-label" for="postmortemSummary">WHAT HAPPENED &amp; WHY</label>
+              <textarea id="postmortemSummary" rows="4" placeholder="Describe the root cause(s), customer impact, and why your remediation is safe…"></textarea>
+              <div class="form-footer"><span id="charCount">0 / 40 min characters</span><button class="primary-button" id="submitButton">Submit review <span>→</span></button></div>
+              <div class="score-result" id="scoreResult" aria-live="polite" hidden></div>
+            </section>
+          </aside>
+        </div>
+        <footer class="page-footer"><span>ON-CALL LAB <b>·</b> LOCAL SIMULATION ONLY</span><span>Evidence is synthetic. No production systems are connected.</span></footer>
+      </main>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+    <script src="app.js" defer></script>
+  </body>
+</html>
