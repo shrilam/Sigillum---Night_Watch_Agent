@@ -13,6 +13,29 @@ The server binds to loopback (`127.0.0.1`) only. It does not need Node.js, npm, 
 
 The home page is a fictional, interactive storefront. Select **Team workspace** to open the incident console. The local demo password is `prathith`. This is a client-side convenience gate for the sandbox only—not secure authentication; do not use it to protect sensitive information or expose the app publicly.
 
+## Migration scaffold (React + FastAPI)
+
+The original sandbox above remains available as a reference. The new `frontend/` and `backend/` projects are an early migration scaffold; currently, the React dashboard reads the seeded checkout scenario and service topology from FastAPI. Investigation, remediation, Ollama, SSE, and SQLite workflows are not implemented yet.
+
+Requirements: Python 3.10+ and Node.js 20+ (npm is included with Node.js). From the repository root, create a Python environment, install backend dependencies, and start FastAPI:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r backend\requirements.txt
+uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
+```
+
+In a second terminal, install and start the frontend:
+
+```powershell
+Set-Location frontend
+npm install
+npm run dev -- --host 127.0.0.1
+```
+
+Open <http://127.0.0.1:5173>. FastAPI's interactive API documentation is at <http://127.0.0.1:8000/docs>. The Vite development server proxies `/api` requests to the loopback-only backend.
+
 ## Scenarios
 
 - **Checkout success rate dropped (SEV-1):** two independent causes—exhausted payment connections and stale inventory cache. Both need their own remediation.
@@ -55,7 +78,11 @@ Diagnosis completeness, remediation completion, and postmortem quality contribut
 
 ## Tests
 
-Run the standard-library tests with `python -m unittest discover -s tests -v`.
+The documented standard-library test command is `python -m unittest discover -s tests -v`, but the test suite has not been added yet; this currently fails because the `tests/` directory does not exist.
+
+## Migration baseline
+
+See [docs/phase-1-baseline.md](docs/phase-1-baseline.md) for the recorded prototype baseline, first implementation slice, safety decisions, and migration checklist.
 
 ## Safety and limitations
 
